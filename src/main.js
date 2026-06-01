@@ -23,9 +23,10 @@ let totalPages = 0;
 form.addEventListener('submit', async event => {
   event.preventDefault();
 
-const query = event.target.elements['search-text'].value.trim();
-     page = 1;
-     currentQuery = query;
+  const query = event.target.elements['search-text'].value.trim();
+
+  page = 1;
+  currentQuery = query;
 
   if (query === '') {
     iziToast.error({
@@ -34,17 +35,17 @@ const query = event.target.elements['search-text'].value.trim();
     });
 
     return;
-    }
-    
+  }
+
   clearGallery(gallery);
   hideLoadMoreButton(loadMoreButton);
   showLoader(loader);
 
   try {
-const data = await getImagesByQuery(query, page);
-const images = data.hits;
-      
-totalPages = Math.ceil(data.totalHits / 15);
+    const data = await getImagesByQuery(query, page);
+    const images = data.hits;
+
+    totalPages = Math.ceil(data.totalHits / 15);
 
     if (images.length === 0) {
       iziToast.error({
@@ -57,10 +58,15 @@ totalPages = Math.ceil(data.totalHits / 15);
     }
 
     renderGallery(images, gallery);
-     if (page < totalPages) {
+
+    if (page < totalPages) {
       showLoadMoreButton(loadMoreButton);
-      }
-      
+    } else {
+      iziToast.info({
+        message: "We're sorry, but you've reached the end of search results.",
+        position: 'topRight',
+      });
+    }
   } catch (error) {
     iziToast.error({
       message: 'Something went wrong!',
@@ -73,31 +79,34 @@ totalPages = Math.ceil(data.totalHits / 15);
   form.reset();
 });
 
-
 loadMoreButton.addEventListener('click', async () => {
   page += 1;
 
+  hideLoadMoreButton(loadMoreButton);
   showLoader(loader);
 
   try {
     const data = await getImagesByQuery(currentQuery, page);
     const images = data.hits;
 
-      renderGallery(images, gallery);
+    renderGallery(images, gallery);
+
     const card = document.querySelector('.gallery-item');
     const cardHeight = card.getBoundingClientRect().height;
-window.scrollBy({
-  top: cardHeight * 2,
-  behavior: 'smooth',
-});
-      if (page >= totalPages) {
-  hideLoadMoreButton(loadMoreButton);
 
-  iziToast.info({
-    message: "We're sorry, but you've reached the end of search results.",
-    position: 'topRight',
-  });
-}
+    window.scrollBy({
+      top: cardHeight * 2,
+      behavior: 'smooth',
+    });
+
+    if (page >= totalPages) {
+      iziToast.info({
+        message: "We're sorry, but you've reached the end of search results.",
+        position: 'topRight',
+      });
+    } else {
+      showLoadMoreButton(loadMoreButton);
+    }
   } catch (error) {
     iziToast.error({
       message: 'Something went wrong!',
